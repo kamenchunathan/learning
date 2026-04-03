@@ -83,9 +83,9 @@ impl Solution {
                 }
             });
 
-            // println!(
-            //     "Robot: {i}, robot left {closes_robot_dist_left}, range {destroyable_range_left}, destroyed {destroyed_left}"
-            // );
+            crate::dlog!(
+                "Robot: {i}, robot left {closes_robot_dist_left}, range {destroyable_range_left}, destroyed {destroyed_left}"
+            );
 
             // Right
             let closes_robot_dist_right = if i < robots.len() - 1 {
@@ -103,14 +103,14 @@ impl Solution {
                 }
             });
 
-            // println!(
-            //     "Robot: {i}, robot right {closes_robot_dist_right}, range {destroyable_range_right}, destroyed {destroyed_right}"
-            // );
+            crate::dlog!(
+                "Robot: {i}, robot right {closes_robot_dist_right}, range {destroyable_range_right}, destroyed {destroyed_right}"
+            );
 
             destroyed_walls.push((destroyed_left, destroyed_right));
         }
 
-        // println!("Destroyed walls {:?}", destroyed_walls);
+        crate::dlog!("Destroyed walls {:?}", destroyed_walls);
         maximize_total_walls(destroyed_walls)
     }
 }
@@ -127,7 +127,7 @@ fn maximize_total_walls(destroyed_walls: Vec<(i32, i32)>) -> i32 {
         }
     }
 
-    //println!("Right wall {:?}", chosen);
+    crate::dlog!("Right wall {:?}", chosen);
     calc_score(&destroyed_walls, &chosen)
 }
 
@@ -186,5 +186,84 @@ mod tests {
     #[test]
     fn test_example_3() {
         assert_eq!(Solution::max_walls(vec![1, 2], vec![100, 1], vec![10]), 0);
+    }
+}
+
+// ── property-based tests ────────────────────────────────────────────────────
+//
+// These use the constraint-aware generator to verify invariants that must hold
+// for *any* valid input, not just the hand-picked examples above.
+//
+// Run with:  cargo test prop_
+// Shrinking: proptest automatically minimises counterexamples.
+#[cfg(test)]
+mod prop_tests {
+    use super::*;
+    use crate::utils::r#gen::s3661::Args;
+    use proptest::prelude::*;
+
+    proptest! {
+        /// The result is always non-negative and never exceeds the total
+        /// number of walls — a basic sanity check on the return type.
+        #[test]
+        fn result_within_wall_count(
+            input in Args { n_robots: 50, n_walls: 50, max_pos: 10_000, max_dist: 1_000 }
+                .strategy()
+        ) {
+            let n_walls = input.walls.len() as i32;
+            let result  = Solution::max_walls(
+                input.robots.clone(),
+                input.distance.clone(),
+                input.walls.clone(),
+            );
+            prop_assert!(result >= 0,        "result must be non-negative, got {result}");
+            prop_assert!(result <= n_walls,  "result {result} exceeds wall count {n_walls}");
+        }
+
+        /// A single robot with infinite range and no neighbours should be
+        /// able to fire either direction and reach every wall on that side.
+        /// Concretely: result > 0 whenever at least one wall is reachable.
+        #[test]
+        fn single_robot_destroys_reachable_walls(
+            input in Args { n_robots: 1, n_walls: 20, max_pos: 10_000, max_dist: 100_000 }
+                .strategy()
+        ) {
+            let result = Solution::max_walls(
+                input.robots.clone(),
+                input.distance.clone(),
+                input.walls.clone(),
+            );
+            // With one robot and max_dist = MAX_DIST (100 000) vs max_pos = 10 000,
+            // the robot can always reach every wall regardless of direction.
+            prop_assert!(result == input.walls.len() as i32,
+                "single robot with unbounded range should hit all {0} walls, got {result}",
+                input.walls.len()
+            );
+        }
+
+        /// Increasing distance can only weakly increase the result —
+        /// a doubled distance array should never produce a lower score.
+        #[test]
+        fn more_range_never_decreases_score(
+            input in Args::small().strategy()
+        ) {
+            let base = Solution::max_walls(
+                input.robots.clone(),
+                input.distance.clone(),
+                input.walls.clone(),
+            );
+            let boosted_dist: Vec<i32> = input.distance.iter()
+                .map(|&d| (d * 2).min(100_000))
+                .collect();
+            let boosted = Solution::max_walls(
+                input.robots.clone(),
+                boosted_dist,
+                input.walls.clone(),
+            );
+            prop_assert!(
+                boosted >= base,
+                "doubling distance reduced score from {base} to {boosted}"
+            );
+        }
     }
 }

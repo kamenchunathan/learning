@@ -1,1 +1,1 @@
-pub mod s3661;
+pub mod leetcode;

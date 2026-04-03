@@ -1,0 +1,8 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 7bb8d8a45f04c6c0e2202508ed9f128b7e7914996bc71e3c789576e6f2431c39 # shrinks to input = Input { robots: [7394], distance: [1], walls: [4789] }
+cc 960aa1c2bec9436bd08c9a57a9c02515e3bae3f3bf792d15af396ecd728ec157 # shrinks to input = Input { robots: [294, 1934, 2635, 4558, 5236, 6015, 7051, 7193, 7693, 8216, 8351, 8633, 9915], distance: [662, 343, 156, 174, 248, 747, 1, 254, 359, 502, 60, 459, 823], walls: [44, 181, 385, 440, 475, 728, 956, 1752, 2236, 2277, 2643, 2791, 3247, 3831, 4374, 4451, 4555, 4565, 4691, 4732, 5268, 5465, 5484, 7447, 7553, 7714, 7837, 8008, 8025, 8041, 8052, 8291, 8682, 8772, 9092, 9409, 9416, 9640, 9661, 9709] }
