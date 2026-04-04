@@ -57,6 +57,7 @@ impl Solution {
         if encoded_text.is_empty() {
             return String::new();
         }
+
         // len is okay because the test is guaratneed to be ASCII which should be a byte per char
         let cols = encoded_text.len() as u32 / rows as u32;
         let rows = rows as u32;
