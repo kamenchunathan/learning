@@ -42,9 +42,10 @@
 struct Solution;
 
 impl Solution {
+   #[unsafe(no_mangle)]
    pub fn closest_target(words: Vec<String>, target: String, start_index: i32) -> i32 {
         let n = words.len();
-        words.into_iter().enumerate().filter(|(i, word)| { *word == target }).map(
+        words.iter().enumerate().filter(|&(_, word)| { *word == target }).map(
             |(i, _)| {
                 let dist = i32::abs((i as i32) - start_index) as usize;
                     (if dist <= n / 2 {
