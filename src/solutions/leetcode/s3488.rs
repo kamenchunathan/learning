@@ -47,7 +47,6 @@ impl Solution {
     pub fn solve_queries(nums: Vec<i32>, queries: Vec<i32>) -> Vec<i32> {
         let mut indices = (0..).take(nums.len()).collect::<Vec<usize>>();
         indices.sort_by_key(|&i| nums[i]);
-        println!("{indices:?}");
 
         queries
             .iter()
@@ -97,6 +96,26 @@ impl Solution {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rand::Rng;
+    use std::time::Instant;
+
+    #[test]
+    pub fn test_large_input_all_same() {
+        let n = 100_000;
+        let nums = vec![1; n];
+        let mut rng = rand::thread_rng();
+        let queries: Vec<i32> = (0..n).map(|_| rng.gen_range(0..n as i32)).collect();
+
+        let start = Instant::now();
+        let sol = Solution::solve_queries(nums, queries);
+        let duration = start.elapsed();
+
+        println!("Large test took: {:?}", duration);
+        assert_eq!(sol.len(), n);
+        for &res in &sol {
+            assert_eq!(res, 1);
+        }
+    }
 
     #[test]
     pub fn example_1() {
