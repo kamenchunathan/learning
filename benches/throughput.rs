@@ -88,6 +88,12 @@ fn bench_s3121<M: Measurement>(c: &mut Criterion<M>, metric: &str) {
     group.bench_with_input("v3_bitwise_ascii", &small_input, |b, input| {
         b.iter(|| S3121::number_of_special_chars_v3(input.clone()));
     });
+    group.bench_with_input("v4_portable_simd", &small_input, |b, input| {
+        b.iter(|| S3121::number_of_special_chars_v4(input.clone()));
+    });
+    group.bench_with_input("v5_avx2_bmi1", &small_input, |b, input| {
+        b.iter(|| unsafe { S3121::number_of_special_chars_v5(input.clone()) });
+    });
     group.finish();
 
     // 2. Benchmark medium input
@@ -100,6 +106,12 @@ fn bench_s3121<M: Measurement>(c: &mut Criterion<M>, metric: &str) {
     });
     group.bench_with_input("v3_bitwise_ascii", &medium_input, |b, input| {
         b.iter(|| S3121::number_of_special_chars_v3(input.clone()));
+    });
+    group.bench_with_input("v4_portable_simd", &medium_input, |b, input| {
+        b.iter(|| S3121::number_of_special_chars_v4(input.clone()));
+    });
+    group.bench_with_input("v5_avx2_bmi1", &medium_input, |b, input| {
+        b.iter(|| unsafe { S3121::number_of_special_chars_v5(input.clone()) });
     });
     group.finish();
 
@@ -114,6 +126,12 @@ fn bench_s3121<M: Measurement>(c: &mut Criterion<M>, metric: &str) {
     });
     group.bench_with_input("v3_bitwise_ascii", &large_input, |b, input| {
         b.iter(|| S3121::number_of_special_chars_v3(input.clone()));
+    });
+    group.bench_with_input("v4_portable_simd", &large_input, |b, input| {
+        b.iter(|| S3121::number_of_special_chars_v4(input.clone()));
+    });
+    group.bench_with_input("v5_avx2_bmi1", &large_input, |b, input| {
+        b.iter(|| unsafe { S3121::number_of_special_chars_v5(input.clone()) });
     });
     group.finish();
 }
@@ -130,11 +148,33 @@ fn bench_s3121_branch(c: &mut Criterion<Perf>) {
     bench_s3121(c, "branch_misses");
 }
 
+// ---------------------------------------------------------------------------
+// Leetcode 3093. Longest Common Suffix Queries
+// ---------------------------------------------------------------------------
+
+mod s3093_bench {
+    use criterion::{
+        BenchmarkId, Criterion, criterion_group, criterion_main, measurement::Measurement,
+    };
+    use learning::solutions::leetcode::s3093::{self, generate_worst_case};
+
+    pub fn bench_time(c: &mut Criterion) {
+        let b = generate_worst_case(10_000, 10_000, 20);
+        let mut group = c.benchmark_group("leetcode/s3093");
+        group.bench_with_input("wow", &b, |bench, inp| {
+            bench.iter(|| {
+                s3093::Solution::string_indices(inp.0.clone(), inp.1.clone());
+            })
+        });
+        group.finish();
+    }
+}
+
 criterion_group!(
     name = benches;
     config = Criterion::default()
         .measurement_time(Duration::from_secs(15));
-    targets = bench_s3661, bench_s3121_time
+    targets = bench_s3661, bench_s3121_time, s3093_bench::bench_time
 );
 
 criterion_group!(
@@ -143,7 +183,7 @@ criterion_group!(
         .with_measurement(
             Perf::new(PerfCounterBuilderLinux::from_hardware_event(HardwareEventType::CacheMisses))
         );
-    targets = bench_s3121_cache
+    targets = bench_s3121_cache,
 );
 
 criterion_group!(
