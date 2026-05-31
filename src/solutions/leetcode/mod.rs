@@ -5,3 +5,4 @@ pub mod s3121;
 pub mod s3300;
 pub mod s3488;
 pub mod s3661;
+pub mod s2126;
